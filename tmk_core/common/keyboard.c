@@ -138,7 +138,7 @@ void keyboard_task(void)
                     // record a processed key
                     matrix_prev[r] ^= ((matrix_row_t)1<<c);
                     // process a key per task call
-                    goto MATRIX_LOOP_END;
+                    // goto MATRIX_LOOP_END;
                 }
             }
         }
