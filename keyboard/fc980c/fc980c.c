@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "timer.h"
 #include "matrix.h"
 #include "led.h"
-#include "fc660c.h"
+#include "fc980c.h"
 
 
 static uint32_t matrix_last_modified = 0;
@@ -46,12 +46,14 @@ void matrix_init(void)
     debug_keyboard = true;
     debug_matrix = true;
 #endif
+    debug_enable = true;
+    debug_matrix = true;
 
     KEY_INIT();
 
-    // LEDs on CapsLock and Insert
-    DDRB  |= (1<<5) | (1<<6);
-    PORTB |= (1<<5) | (1<<6);
+    // LEDs on NumLock, CapsLock and ScrollLock(PB4, PB5, PB6)
+    DDRB  |= (1<<4) | (1<<5) | (1<<6);
+    PORTB |= (1<<4) | (1<<5) | (1<<6);
 
     // initialize matrix state: all keys off
     for (uint8_t i=0; i < MATRIX_ROWS; i++) _matrix0[i] = 0x00;
@@ -128,10 +130,20 @@ matrix_row_t matrix_get_row(uint8_t row)
 
 void led_set(uint8_t usb_led)
 {
-    if (usb_led & (1<<USB_LED_CAPS_LOCK)) {
-        PORTB &= ~(1<<6);
+    if (usb_led & (1<<USB_LED_NUM_LOCK)) {
+        PORTB |=  (1<<4);
     } else {
+        PORTB &= ~(1<<4);
+    }
+    if (usb_led & (1<<USB_LED_CAPS_LOCK)) {
+        PORTB |=  (1<<5);
+    } else {
+        PORTB &= ~(1<<5);
+    }
+    if (usb_led & (1<<USB_LED_SCROLL_LOCK)) {
         PORTB |=  (1<<6);
+    } else {
+        PORTB &= ~(1<<6);
     }
 }
 
@@ -141,21 +153,22 @@ void led_set(uint8_t usb_led)
 #include "unimap.h"
 
 const uint8_t PROGMEM unimap_trans[MATRIX_ROWS][MATRIX_COLS] = {
-    { UNIMAP_Q,     UNIMAP_W,     UNIMAP_E,     UNIMAP_TAB,   UNIMAP_R,     UNIMAP_U,     UNIMAP_T,     UNIMAP_Y,
-      UNIMAP_O,     UNIMAP_P,     UNIMAP_LBRC,  UNIMAP_I,     UNIMAP_RBRC,  UNIMAP_NO,    UNIMAP_BSLS,  UNIMAP_DEL   },
-    { UNIMAP_1,     UNIMAP_2,     UNIMAP_3,     UNIMAP_GRV,   UNIMAP_4,     UNIMAP_7,     UNIMAP_5,     UNIMAP_6,
-      UNIMAP_9,     UNIMAP_0,     UNIMAP_MINS,  UNIMAP_8,     UNIMAP_EQL,   UNIMAP_NO,    UNIMAP_BSPC,  UNIMAP_INS   },
-    { UNIMAP_NO,    UNIMAP_LGUI,  UNIMAP_LALT,  UNIMAP_LCTL,  UNIMAP_NO,    UNIMAP_NO,    UNIMAP_NO,    UNIMAP_SPC,
-      UNIMAP_RALT,  UNIMAP_NO,    UNIMAP_RCTL,  UNIMAP_NO,    UNIMAP_RGUI,  UNIMAP_DOWN,  UNIMAP_LEFT,  UNIMAP_RGHT  },
-    { UNIMAP_NO,    UNIMAP_Z,     UNIMAP_X,     UNIMAP_LSFT,  UNIMAP_C,     UNIMAP_N,     UNIMAP_V,     UNIMAP_B,
-      UNIMAP_COMM,  UNIMAP_DOT,   UNIMAP_SLSH,  UNIMAP_M,     UNIMAP_RSFT,  UNIMAP_UP,    UNIMAP_NO,    UNIMAP_NO    },
-    { UNIMAP_A,     UNIMAP_S,     UNIMAP_D,     UNIMAP_CAPS,  UNIMAP_F,     UNIMAP_J,     UNIMAP_G,     UNIMAP_H,
-      UNIMAP_L,     UNIMAP_SCLN,  UNIMAP_QUOT,  UNIMAP_K,     UNIMAP_NO,    UNIMAP_NO,    UNIMAP_ENT,   UNIMAP_NO    },
-    { UNIMAP_NO,    UNIMAP_NO,    UNIMAP_NO,    UNIMAP_NO,    UNIMAP_NO,    UNIMAP_NO,    UNIMAP_NO,    UNIMAP_NO,
-      UNIMAP_NO,    UNIMAP_NO,    UNIMAP_NO,    UNIMAP_NO,    UNIMAP_NO,    UNIMAP_NO,    UNIMAP_NO,    UNIMAP_NO    },
-    { UNIMAP_NO,    UNIMAP_NO,    UNIMAP_NO,    UNIMAP_NO,    UNIMAP_NO,    UNIMAP_NO,    UNIMAP_NO,    UNIMAP_NO,
-      UNIMAP_NO,    UNIMAP_NO,    UNIMAP_NO,    UNIMAP_NO,    UNIMAP_NO,    UNIMAP_NO,    UNIMAP_NO,    UNIMAP_NO    },
-    { UNIMAP_NO,    UNIMAP_NO,    UNIMAP_NO,    UNIMAP_NO,    UNIMAP_NO,    UNIMAP_NO,    UNIMAP_NO,    UNIMAP_NO,
-      UNIMAP_NO,    UNIMAP_NO,    UNIMAP_NO,    UNIMAP_NO,    UNIMAP_NO,    UNIMAP_NO,    UNIMAP_NO,    UNIMAP_NO    }
+    { UNIMAP_LEFT, UNIMAP_RCTL, UNIMAP_RALT, UNIMAP_NO  , UNIMAP_DOWN, UNIMAP_PDOT, UNIMAP_RGHT, UNIMAP_P0  ,
+      UNIMAP_X   , UNIMAP_LGUI, UNIMAP_GRV , UNIMAP_V   , UNIMAP_NO  , UNIMAP_ESC , UNIMAP_M   , UNIMAP_SPC   },
+    { UNIMAP_RGUI, UNIMAP_DOT , UNIMAP_NO  , UNIMAP_NO  , UNIMAP_P1  , UNIMAP_PENT, UNIMAP_P2  , UNIMAP_P3  ,
+      UNIMAP_Z   , UNIMAP_LALT, UNIMAP_RCTL, UNIMAP_C   , UNIMAP_K   , UNIMAP_NO  , UNIMAP_N   , UNIMAP_B     },
+    { UNIMAP_QUOT, UNIMAP_SLSH, UNIMAP_COMM, UNIMAP_NO  , UNIMAP_P4  , UNIMAP_PPLS, UNIMAP_P5  , UNIMAP_P6  ,
+      UNIMAP_D   , UNIMAP_A   , UNIMAP_LSFT, UNIMAP_F   , UNIMAP_J   , UNIMAP_F1  , UNIMAP_H   , UNIMAP_G     },
+    { UNIMAP_RSFT, UNIMAP_SCLN, UNIMAP_L   , UNIMAP_RBRC, UNIMAP_UP  , UNIMAP_NO  , UNIMAP_NO  , UNIMAP_NO  ,
+      UNIMAP_S   , UNIMAP_Q   , UNIMAP_CAPS, UNIMAP_R   , UNIMAP_I   , UNIMAP_F3  , UNIMAP_U   , UNIMAP_T     },
+    { UNIMAP_NO  , UNIMAP_NO  , UNIMAP_NO  , UNIMAP_NO  , UNIMAP_NO  , UNIMAP_NO  , UNIMAP_NO  , UNIMAP_NO  ,
+      UNIMAP_NO  , UNIMAP_NO  , UNIMAP_NO  , UNIMAP_NO  , UNIMAP_NO  , UNIMAP_NO  , UNIMAP_NO  , UNIMAP_NO    },
+    { UNIMAP_EQL , UNIMAP_MINS, UNIMAP_0   , UNIMAP_BSLS, UNIMAP_NLCK, UNIMAP_BSPC, UNIMAP_PSLS, UNIMAP_PAST,
+      UNIMAP_3   , UNIMAP_2   , UNIMAP_NO  , UNIMAP_4   , UNIMAP_9   , UNIMAP_F2  , UNIMAP_7   , UNIMAP_6     },
+    { UNIMAP_LBRC, UNIMAP_P   , UNIMAP_O   , UNIMAP_ENT , UNIMAP_P7  , UNIMAP_PMNS, UNIMAP_P8  , UNIMAP_P9  ,
+      UNIMAP_W   , UNIMAP_1   , UNIMAP_TAB , UNIMAP_E   , UNIMAP_8   , UNIMAP_F4  , UNIMAP_Y   , UNIMAP_5     },
+    { UNIMAP_F11 , UNIMAP_F10 , UNIMAP_F9  , UNIMAP_F12 , UNIMAP_DEL , UNIMAP_PGDN, UNIMAP_INS , UNIMAP_PGUP,
+      UNIMAP_NO  , UNIMAP_NO  , UNIMAP_NO  , UNIMAP_NO  , UNIMAP_F8  , UNIMAP_F5  , UNIMAP_F7  , UNIMAP_F6    }
+
 };
 #endif

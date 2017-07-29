@@ -1,5 +1,5 @@
-#ifndef FC660C_H
-#define FC660C_H
+#ifndef FC980C_H
+#define FC980C_H
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -19,8 +19,8 @@
 /*
  * Pin configuration for ATMega32U4
  *
- * Row:     PD4-6, 7(~EN)
- * Col:     PB0-2, 3(Z5 ~EN), 4(Z4 ~EN)
+ * Row:     PD4-6, PD7(~EN)
+ * Col:     PB0-3
  * Key:     PC6(pull-uped)
  * Hys:     PC7
  */
@@ -32,7 +32,7 @@ static inline void KEY_HYS_OFF(void) { (PORTC &= ~(1<<7)); }
 static inline void KEY_INIT(void)
 {
     /* Col */
-    DDRB  |=  0x1F;
+    DDRB  |=  0x0F;
     /* Key: input with pull-up */
     DDRC  &= ~(1<<6);
     PORTC |=  (1<<6);
@@ -46,38 +46,37 @@ static inline void KEY_INIT(void)
 }
 static inline void SET_ROW(uint8_t ROW)
 {
-    // set row with unabling key
-    PORTD = (PORTD & 0x0F) | (1<<7) | ((ROW & 0x07) << 4);
+    // PD4-6
+    PORTD = (PORTD & 0x8F) | ((ROW & 0x07) << 4);
 }
 static inline void SET_COL(uint8_t COL)
 {
-    //         |PB3(Z5 ~EN)|PB4(Z4 ~EN)
-    // --------|-----------|-----------
-    // Col:0-7 |high       |low
-    // Col:8-F |low        |high
-    PORTB = (PORTB & 0xE0) | ((COL & 0x08) ? 1<<4 : 1<<3) | (COL & 0x07);
+    // PB0-3
+    PORTB = (PORTB & 0xF0) | (COL & 0x0F);
 }
 
 
 #ifdef UNIMAP_ENABLE
 /* unimap */
 #define KMAP( \
-    K35,K1E,K1F,K20,K21,K22,K23,K24,K25,K26,K27,K2D,K2E,K2A,    K49, \
-    K2B,K14,K1A,K08,K15,K17,K1C,K18,K0C,K12,K13,K2F,K30,K31,    K4C, \
-    K39,K04,K16,K07,K09,K0A,K0B,K0D,K0E,K0F,K33,K34,    K28,         \
-    K79,K1D,K1B,K06,K19,K05,K11,K10,K36,K37,K38,        K7D,K52,     \
-    K78,K7B,K7A,            K2C,            K7E,K7C,K7F,K50,K51,K4F  \
+    K29,    K3A,K3B,K3C,K3D,K3E,K3F,K40,K41,K42,K43,K44,K45,                K4C,K49,K4B,K4E, \
+    K35,K1E,K1F,K20,K21,K22,K23,K24,K25,K26,K27,K2D,K2E,K2A,                K53,K54,K55,K56, \
+    K2B,K14,K1A,K08,K15,K17,K1C,K18,K0C,K12,K13,K2F,K30,K31,                K5F,K60,K61,K57, \
+    K39,K04,K16,K07,K09,K0A,K0B,K0D,K0E,K0F,K33,K34,    K28,                K5C,K5D,K5E,     \
+    K79,    K1D,K1B,K06,K19,K05,K11,K10,K36,K37,K38,    K7D,      K52,      K59,K5A,K5B,K58, \
+    K78,K7B,K7A,            K2C,                K7E,K7C,K7F,  K50,K51,K4F,      K62,K63      \
 ) UNIMAP( \
-            NO, NO, NO, NO, NO, NO, NO, NO, NO, NO, NO, NO,                                     \
-    NO,     NO, NO, NO, NO, NO, NO, NO, NO, NO, NO, NO, NO,       NO, NO, NO,       NO, NO, NO, \
-    K35,K1E,K1F,K20,K21,K22,K23,K24,K25,K26,K27,K2D,K2E,NO, K2A,  K49,NO, NO,   NO, NO, NO, NO, \
-    K2B,K14,K1A,K08,K15,K17,K1C,K18,K0C,K12,K13,K2F,K30,    K31,  K4C,NO, NO,   NO, NO, NO, NO, \
-    K39,K04,K16,K07,K09,K0A,K0B,K0D,K0E,K0F,K33,K34,    NO, K28,                NO, NO, NO, NO, \
-    K79,NO, K1D,K1B,K06,K19,K05,K11,K10,K36,K37,K38,    NO, K7D,      K52,      NO, NO, NO, NO, \
-    K78,K7B,K7A,NO,         K2C,        NO, NO, K7E,K7F,NO, K7C,  K50,K51,K4F,  NO,     NO, NO  \
+            NO, NO, NO, NO, NO, NO, NO, NO, NO, NO, NO, NO,                                      \
+    K29,    K3A,K3B,K3C,K3D,K3E,K3F,K40,K41,K42,K43,K44,K45,      NO, NO, NO,       NO, NO, NO,  \
+    K35,K1E,K1F,K20,K21,K22,K23,K24,K25,K26,K27,K2D,K2E,NO, K2A,  K49,NO, K4B,  K53,K54,K55,K56, \
+    K2B,K14,K1A,K08,K15,K17,K1C,K18,K0C,K12,K13,K2F,K30,    K31,  K4C,NO, K4E,  K5F,K60,K61,K57, \
+    K39,K04,K16,K07,K09,K0A,K0B,K0D,K0E,K0F,K33,K34,    NO, K28,                K5C,K5D,K5E,NO,  \
+    K79,NO, K1D,K1B,K06,K19,K05,K11,K10,K36,K37,K38,    NO, K7D,      K52,      K59,K5A,K5B,K58, \
+    K78,K7B,K7A,NO,         K2C,        NO, NO, K7E,K7F,NO, K7C,  K50,K51,K4F,      K62,K63,NO   \
 )
 #else
 /* actionmap */
+/*
 #define KMAP( \
     K13, K10, K11, K12, K14, K16, K17, K15, K1B, K18, K19, K1A, K1C, K1E,      K1F, \
     K03, K00, K01, K02, K04, K06, K07, K05, K0B, K08, K09, K0A, K0C, K0E,      K0F, \
@@ -102,6 +101,7 @@ static inline void SET_COL(uint8_t COL)
     { AC_NO,    AC_NO,    AC_NO,    AC_NO,    AC_NO,    AC_NO,    AC_NO,    AC_NO,      \
       AC_NO,    AC_NO,    AC_NO,    AC_NO,    AC_NO,    AC_NO,    AC_NO,    AC_NO    }  \
 }
+*/
 #endif
 
 #endif
